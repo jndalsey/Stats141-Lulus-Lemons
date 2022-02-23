@@ -38,11 +38,16 @@ for (yr in minYear:maxYear) {
                   yr, "&draft_round=", rd, 
                   "&draft_type=junreg&query_type=year_round&from_type_jc=0&from_type_hs=0&from_type_4y=0&from_type_unk=0")
     
+    url <- url(url, "rb")
+    
     # randomized sys sleep
-    Sys.sleep(sample(2:4, 1))
+    Sys.sleep(rnorm(1, 10, 1))
     
     # read the data off the page
     main_page <- read_html(url)
+    
+    # close the url so you dont get IP banned
+    close(url)
     
     playermat <- main_page %>% 
       html_nodes(".right, .left, .center") %>% 
@@ -107,4 +112,4 @@ write.csv(pdf, "ScrapedPlayerDraft.csv", row.names = FALSE)
 
 #### read csv
 
-# datain <- read.csv("ScrapedPlayerDraft.csv")
+# data <- read.csv("ScrapedPlayerDraft.csv")
