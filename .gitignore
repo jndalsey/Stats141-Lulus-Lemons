@@ -1,6 +1,6 @@
 # Ignore Mac system files
 .DS_store
-/Milestone/.DS_store
+*/.DS_store
 
 # From Template!!
 
