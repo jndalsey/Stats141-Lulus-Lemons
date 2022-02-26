@@ -9,6 +9,12 @@ library(tidyverse)
 # read in data created by final_scrapedraft.R
 scrapedPlayerDraft <- read.csv("ScrapedPlayerDraft.csv")
 
+# read in register
+reg <- read.csv("MasterRegister.csv")
+
+# read in ID key
+key <- readxl::read_xlsx("SFBB-Player-ID-Map.xlsx", sheet = "PLAYERIDMAP")
+
 ##### clean
 
 # get only top 200 players by signing bonus per year
