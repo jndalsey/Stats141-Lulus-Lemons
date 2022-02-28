@@ -3,28 +3,34 @@
 # gameLogsMissing <- readRDS("GameLogsMissing.RDS")
 
 
-cleanPlayerDraft <- read.csv("CleanPlayerDraft.csv")
+# cleanPlayerDraft <- read.csv("CleanPlayerDraft.csv") # old file
+Players <- read.csv("Players.csv")
 
 GLC <- readRDS("GameLogsClean.RDS")
 
-w05 <- read.csv("Raw WAR Files/2005 WAR.csv")
+# w05 <- read.csv("Raw WAR Files/2005 WAR.csv") # old file
+WAR <- read.csv("WAR.csv")
 
+
+# this is already done in players.csv
+
+# Players <- cleanPlayerDraft %>% 
+#   filter(!ID_missing)
+# 
+# notPlayers <- cleanPlayerDraft %>% 
+#   filter(ID_missing)
+
+
+
+
+isPitcher <- GLC$`452249`$isPitcher # tells you if that player is a pitcher
+minors <- GLC$`452249`$minors # gives you their minor stats
+majors <- GLC$`452249`$majors # guves you their major stats
 
 library(tidyverse)
-Players <- cleanPlayerDraft %>% 
-  filter(!ID_missing)
+library(lubridate)
 
-notPlayers <- cleanPlayerDraft %>% 
-  filter(ID_missing)
-
-
-minors2 <- GLC$`459943`$minors
-minors <- GLC$`452249`$minors
-majors <- GLC$`452249`$majors
-
-# library(lubridate)
-
-# add a bool to majors and minors for isMinors 
+# add a bool to majors and minors for isMinors and isPitcher
 
 majors <- majors %>% 
   mutate(isMinors = FALSE,
@@ -38,16 +44,14 @@ allgames <- bind_rows(majors, minors) %>%
   arrange(Date) #%>% 
   #mutate(Datediff = Date - lag(Date))
 
+# need to fix the last part for lag
 
 
-
-minors <- left_join(minors, allgame)
-
-
-for (i in seq_along(list)) {
-  
+for (i in seq_along(GLC)) {
+  # do the thing for each player
 }
 
 
+# output should be a list with a single data frame (allgames) inside
 
 
