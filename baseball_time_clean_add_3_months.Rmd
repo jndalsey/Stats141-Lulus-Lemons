@@ -1,0 +1,83 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``````{r}
+load("./data_clean_time_result.RData")
+```
+
+```{r}
+load("data_clean_time_single.RData")
+```
+
+```{r}
+data_clean_time5 = list()
+for (i in 1:714){
+  data_i = data_clean_time_result[[i]]
+  data_result = data_i %>% filter(as.numeric(time_difference) > 90)
+  data_clean_time5 = append(data_clean_time5, list(data_result))
+}
+```
+
+```{r}
+names(data_clean_time5) = names(data_clean_time_result)
+```
+
+```{r}
+data_clean_time6 = list()
+for(i in 1:714){
+  data_i = data_clean_time5[[i]]
+  data_result = data_i %>% mutate(year_to_day = yday(Date), current_season_miss = yday(Date) - 90, prev_year_miss = as.numeric(time_difference) - year_to_day - 92)
+  data_result = data_result %>% mutate(miss_total = prev_year_miss + current_season_miss)
+  data_result = data_result %>% mutate(is_miss_3_months_season = miss_total > 90)
+  data_clean_time6 = append(data_clean_time6, list(data_result))
+}
+```
+
+```{r}
+data_clean_time6[[714]]
+```
+
+```{r}
+miss_3_months = c()
+for(i in 1:714){
+  if(nrow(data_clean_time_result[[i]]) == 0)
+  {
+    miss_3_months = append(miss_3_months, NA)
+  }
+  else{
+    
+    miss_3_months = append(miss_3_months, sum(data_clean_time6[[i]]$is_miss_3_months_season) > 0)
+  }
+}
+```
+
+```{r}
+data_clean_time_single
+```
+
+
+```{r}
+table(miss_3_months)
+```
+```{r}
+data_clean_time_result[[41]]
+```
+
+
+```{r}
+table(data_clean_time_single$is_miss_10_months)
+```
+```{r}
+data_clean_time_single_3_months = data_clean_time_single %>% mutate(is_miss_3_months_season = miss_3_months)
+```
+
+```{r}
+save(data_clean_time_single_3_months, file = "data_clean_time_single_3_months.RData")
+```
+
