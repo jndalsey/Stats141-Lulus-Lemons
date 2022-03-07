@@ -1,0 +1,88 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load("./data_clean_time_result.RData")
+```
+
+```{r}
+data_clean_time_result$`457708`
+```
+
+```{r}
+for (i in 1:714){
+  if(nrow(data_clean_time_result[[i]]) == 0){
+    print(i)
+  }
+}
+```
+There are 7 players who do not have any games before age 25. 
+```{r}
+Reg = c()
+for(i in 1:714){
+  Reg = append(Reg, data_clean_time_result[[i]]$RegLookup[1])
+}
+```
+
+```{r}
+data[[75]]$majors$playerid
+data[[353]]$majors$playerid
+data[[380]]$minors$minor_playerid
+data[[520]]$majors$playerid
+data[[543]]$minors$minor_playerid
+data[[596]]$minors$minor_playerid
+data[[614]]$minors$minor_playerid
+```
+
+```{r}
+Reg[[75]] = "4214"
+Reg[[353]] = "8433"
+Reg[[380]] = "5097"
+Reg[[520]] = "9780"
+Reg[[543]] = "9767"
+Reg[[596]] = "11494"
+Reg[[614]] = "11369"
+```
+
+```{r}
+data[[353]]
+```
+```{r}
+miss = c()
+for(i in 1:714){
+  if(nrow(data_clean_time_result[[i]]) == 0)
+  {
+    miss = append(miss, NA)
+  }
+  else{
+    
+    miss = append(miss, sum(data_clean_time_result[[i]]$is_miss_10_months) > 0)
+  }
+}
+```
+
+```{r}
+data_clean_time_result[183]
+```
+```{r}
+miss[75]
+```
+
+```{r}
+data_clean_time_single = data.frame("RegLookup" = Reg, "is_miss_10_months" = miss)
+```
+
+```{r}
+save(data_clean_time_single, file = "data_clean_time_single.RData")
+```
+
+```{r}
+load("data_clean_time_single.RData")
+```
+

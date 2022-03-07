@@ -1,0 +1,155 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(lubridate)
+```
+
+
+```{r}
+data = readRDS('./GameLogsClean.RDS')
+```
+
+Delete no minor
+birthday + 25
+Add to player's dataset
+filter the game logs any date before 25 years. 
+Missing time >10 months
+```{r}
+player = read.csv("./Players.csv")
+```
+
+
+
+```{r}
+data_clean_time = list()
+for (i in 1:714){
+  data_minor = data[[i]]$minors
+  data_Major = data[[i]]$majors
+  
+  if(nrow(data_minor) > 0 & nrow(data_Major) > 0){
+  data_minor$isPitcher = data[[i]]$isPitcher
+  data_Major$isPitcher = data[[i]]$isPitcher
+  player_i = player%>%filter(RegLookup == data_minor$minor_playerid[1])
+  data_minor = data_minor %>% mutate(BirthDate = player_i$BirthDate)
+  data_Major = data_Major %>% mutate(BirthDate = player_i$BirthDate)
+  
+  data_minor  = data_minor %>% mutate(isMinor = T) %>% select(minor_playerid, BirthDate, isPitcher, Level, Date, isMinor) %>% rename(RegLookup = minor_playerid)
+  data_Major  = data_Major %>% mutate(isMinor = F) %>% mutate(Level = "MLB") %>% select(isPitcher, BirthDate, Level, playerid, Date, isMinor) %>% rename(RegLookup = playerid)
+  data_clean = rbind(data_minor, data_Major)
+  data_clean = data_clean %>% arrange(Date)
+  data_clean2 = append(data_clean$Date[1], data_clean$Date[-length(data_clean$Date)])
+  data_clean = data_clean %>% mutate(time_difference = difftime(data_clean$Date, data_clean2, units = "day"))
+  
+  data_clean_time = append(data_clean_time, list(data_clean))
+  }
+  if(nrow(data_minor) == 0){
+    print(i)
+  #data_minor$isPitcher = data[[i]]$isPitcher
+  data_Major$isPitcher = data[[i]]$isPitcher
+  player_i = player%>%filter(player$RegLookup == data_Major$playerid[1])
+  data_Major = data_Major %>% mutate(BirthDate = player_i$BirthDate)
+  data_Major  = data_Major %>% mutate(isMinor = F) %>% mutate(Level = "MLB") %>% select(playerid, BirthDate, Level, isPitcher, Date, isMinor) %>% rename(RegLookup = playerid)
+  data_clean = data_Major
+  data_clean = data_clean %>% arrange(Date)
+  data_clean2 = append(data_clean$Date[1], data_clean$Date[-length(data_clean$Date)])
+  data_clean = data_clean %>% mutate(time_difference = difftime(data_clean$Date, data_clean2, units = "day"))
+  
+  data_clean_time = append(data_clean_time, list(data_clean))
+  }
+  if(nrow(data_Major) == 0){
+  data_minor$isPitcher = data[[i]]$isPitcher
+  player_i = player%>%filter(player$RegLookup == data_minor$minor_playerid[1])
+  data_minor = data_minor %>% mutate(BirthDate = player_i$BirthDate)
+  #data_Major$isPitcher = data[[i]]$isPitcher
+  data_minor  = data_minor %>% mutate(isMinor = T) %>% select(minor_playerid, BirthDate, isPitcher, Level, Date, isMinor) %>% rename(RegLookup = minor_playerid)
+  data_clean = data_minor
+  data_clean = data_clean %>% arrange(Date)
+  data_clean2 = append(data_clean$Date[1], data_clean$Date[-length(data_clean$Date)])
+  data_clean = data_clean %>% mutate(time_difference = difftime(data_clean$Date, data_clean2, units = "day"))
+  
+  data_clean_time = append(data_clean_time, list(data_clean))
+  }
+}
+```
+
+```{r}
+data_clean_time2 = list()
+for(i in 1:714){
+  data_i = data_clean_time[[i]]
+  data_i$Birthday = as.Date(data_i$BirthDate, format =  "%Y-%m-%d")
+  data_clean_time2 = append(data_clean_time2, list(data_i))
+}
+```
+
+```{r}
+names(data_clean_time2) = names(data)
+```
+
+```{r}
+data_clean_time3 = list()
+for (i in 1:714){
+  data_i = data_clean_time2[[i]] 
+  data_result = data_i %>% filter(difftime(Date, BirthDate, units = "days") <= 9132)
+  data_clean_time3 = append(data_clean_time3, list(data_result))
+}
+```
+
+```{r}
+names(data_clean_time3) = names(data)
+```
+
+```{r}
+data_clean_time4 = list()
+for (i in 1:714){
+  data_i = data_clean_time3[[i]] 
+  data_result = data_i %>% mutate(is_miss_10_months = time_difference > 300)
+  data_clean_time4 = append(data_clean_time4, list(data_result))
+}
+```
+
+```{r}
+names(data_clean_time4) = names(data)
+```
+
+```{r}
+miss = c()
+for (i in 1:714){
+  data_i = data_clean_time4[[i]] 
+  miss = append(miss, sum(data_i$is_miss_10_months))
+}
+```
+
+```{r}
+data_clean_time_result = list()
+for (i in 1:714){
+  data_i = data_clean_time4[[i]] 
+  data_result = data_i %>% select(RegLookup, BirthDate, isPitcher, Level, Date, isMinor, time_difference, is_miss_10_months)
+  data_clean_time_result = append(data_clean_time_result, list(data_result))
+}
+```
+
+```{r}
+names(data_clean_time_result) = names(data)
+```
+
+```{r}
+data_clean_time_result$`457708`
+```
+
+
+```{r}
+save(data_clean_time_result, file = "data_clean_time_result.RData")
+```
+
+```{r}
+load("./data_clean_time_result.RData")
+```
+
