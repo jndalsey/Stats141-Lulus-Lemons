@@ -1,0 +1,115 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``````{r}
+load("./data_clean_time_result.RData")
+```
+
+```{r}
+load("./data_clean_time_single_3_months.RData")
+```
+
+```{r}
+data_clean_time5 = list()
+for (i in 1:714){
+  data_i = data_clean_time_result[[i]]
+  data_result = data_i %>% filter(as.numeric(time_difference) > 90)
+  data_clean_time5 = append(data_clean_time5, list(data_result))
+}
+```
+
+```{r}
+names(data_clean_time5) = names(data_clean_time_result)
+```
+
+```{r}
+data_clean_time6 = list()
+for(i in 1:714){
+  data_i = data_clean_time5[[i]]
+  data_result = data_i %>% mutate(year_to_day = yday(Date), current_season_miss = yday(Date) - 90, prev_year_miss = as.numeric(time_difference) - year_to_day - 92)
+  data_result = data_result %>% mutate(miss_total = prev_year_miss + current_season_miss)
+  data_result = data_result %>% mutate(is_miss_3_months_season = miss_total > 90)
+  data_result = data_result %>% mutate(time_miss_prev = time_difference - year_to_day)
+  data_result = data_result %>% mutate(prev_year_before = ifelse(is_miss_3_months_season == TRUE, year(Date) - 2 -  as.numeric(time_difference - year_to_day) %/% 365 , NA))
+  data_result = data_result %>% mutate(year_after = ifelse(is_miss_3_months_season, year(Date) + 1, NA))
+  data_clean_time6 = append(data_clean_time6, list(data_result))
+}
+```
+
+```{r}
+data_clean_time_single_3_months
+```
+
+
+```{r}
+data_clean_time6[[39]]
+```
+```{r}
+prev_year_before = c()
+for(i in 1:714){
+  data_i = data_clean_time6[[i]]
+  if(nrow(data_i) == 0){
+    prev_year_before = append(prev_year_before, NA)
+  }
+  else{
+  if(!is.na(data_clean_time_single_3_months[i, ]$is_miss_3_months_season)){
+    
+    data_i_miss = data_i %>% filter(!is.na(prev_year_before))
+    prev_year_before = append(prev_year_before, data_i_miss$prev_year_before[1])
+  }
+    else{
+      prev_year_before = append(prev_year_before, NA)
+    }
+  }
+}
+```
+
+```{r}
+year_after = c()
+for(i in 1:714){
+  data_i = data_clean_time6[[i]]
+  if(nrow(data_i) == 0){
+    year_after = append(year_after, NA)
+  }
+  else{
+  if(!is.na(data_clean_time_single_3_months[i, ]$is_miss_3_months_season)){
+    
+    data_i_miss = data_i %>% filter(!is.na(year_after))
+    year_after = append(year_after, data_i_miss$year_after[1])
+  }
+  else{
+    year_after = append(year_after, NA)
+  }
+  }
+}
+```
+
+```{r}
+data_clean_time6[[111]]
+```
+
+
+```{r}
+prev_year_before
+```
+```{r}
+year_after
+```
+
+```{r}
+data_clean_time_add_season = data_clean_time_single_3_months %>% mutate(prev_year_before = prev_year_before, year_after = year_after)
+```
+
+```{r}
+save(data_clean_time_add_season, file = "data_clean_time_add_season.RData")
+```
+
+```{r}
+load("./data_clean_time_add_season.RData")
+```
