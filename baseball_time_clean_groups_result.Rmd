@@ -1,0 +1,217 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+``````{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+load("./data_clean_time_result.RData")
+```
+
+```{r}
+players = read.csv("./Players.csv")
+```
+
+```{r}
+players = players %>% mutate(LastPlayedDate2 = ifelse(is.na(LastPlayedDate), "2022-3-6", LastPlayedDate))
+```
+
+```{r}
+players = players %>% mutate(
+time_in_MLB = as.numeric(difftime(as.Date(players$LastPlayedDate2), as.Date(players$MLBDebut), units = "days"))/365.25)
+```
+
+```{r}
+players = players %>% mutate(
+time_in_MLB2 = ifelse(is.na(time_in_MLB
+), 0, time_in_MLB))
+```
+
+```{r}
+players = players %>% mutate(
+success = time_in_MLB2 > 5, TRUE, FALSE)
+```
+
+```{r}
+#removing designated hitters
+players <- players[-which(players$PrimaryPos == "DH"),]
+```
+
+
+```{r}
+load("data_clean_time_single.RData")
+load("data_clean_time_single_3_months.RData")
+#data_1 = merge(data_clean_time_single, players, by = "RegLookup")
+data_1 = merge(data_clean_time_single_3_months, players, by = "RegLookup")
+```
+
+```{r}
+#unique(data_1$PrevType)
+data_1_4yr <- data_1 %>%
+  filter(PrevType == "4Yr")
+
+data_1_hs <- data_1 %>%
+  filter(PrevType == "HS")
+
+data_1_jc <- data_1 %>%
+  filter(PrevType == "JC")
+```
+
+
+```{r}
+boxplot_4yr <- ggplot(data_1_4yr, aes(x=success, y=Career_WAR, fill=success)) + 
+  geom_boxplot(lwd=0.2) +
+  ylim(0, 80) +
+  scale_fill_manual(values=c("#d95543", "#39994f")) +
+  labs(title = "Career WAR distribution for Players Drafted in 4 Year Colleges", x="Player was Successful?", y="Career WAR") +
+  theme(text=element_text(family = "Times New Roman"), plot.title = element_text(face="bold"), legend.position = "none")
+boxplot_4yr
+
+```
+
+
+```{r}
+boxplot_hs <- ggplot(data_1_hs, aes(x=success, y=Career_WAR, fill=success)) + 
+  geom_boxplot(lwd=0.2) +
+  ylim(0, 80) +
+  scale_fill_manual(values=c("#d95543", "#39994f")) +
+  labs(title = "Career WAR distribution for Players Drafted in High School", x="Player was Successful?", y="Career WAR") +
+  theme(text=element_text(family = "Times New Roman"), plot.title = element_text(face="bold"), legend.position = "none")
+boxplot_hs
+```
+
+
+```{r}
+boxplot_jc <- ggplot(data_1_jc, aes(x=success, y=Career_WAR, fill=success)) + 
+  geom_boxplot(lwd=0.2) +
+  ylim(0, 80) +
+  scale_fill_manual(values=c("#d95543", "#39994f")) +
+  labs(title = "Career WAR distribution for Players Drafted in Junior College", x="Player was Successful?", y="Career WAR") +
+  theme(text=element_text(family = "Times New Roman"), plot.title = element_text(face="bold"), legend.position = "none")
+boxplot_jc
+```
+
+
+```{r}
+t.test(Career_WAR ~ success, data = data_1_4yr, alternative = "less")
+t.test(Career_WAR ~ success, data = data_1_hs, alternative = "less")
+t.test(Career_WAR ~ success, data = data_1_jc, alternative = "less")
+```
+
+```{r}
+t.test(Career_WAR ~ is_miss_3_months_season, data = data_1_4yr, alternative = "greater")
+t.test(Career_WAR ~ is_miss_3_months_season, data = data_1_hs, alternative = "greater")
+t.test(Career_WAR ~ is_miss_3_months_season, data = data_1_jc, alternative = "greater")
+```
+
+```{r}
+t.test(Career_WAR ~ is_miss_10_months, data = data_1_4yr, alternative = "greater")
+t.test(Career_WAR ~ is_miss_10_months, data = data_1_hs, alternative = "greater")
+t.test(Career_WAR ~ is_miss_10_months, data = data_1_jc, alternative = "greater")
+```
+
+
+```{r}
+l_4yr = lm(Career_WAR ~ success, data = data_1_4yr)
+anova(l_4yr)
+
+l_hs = lm(Career_WAR ~ success, data = data_1_hs)
+anova(l_hs)
+
+l_jc = lm(Career_WAR ~ success, data = data_1_jc)
+anova(l_jc)
+```
+
+```{r}
+#updating positions
+data_2 <- data_1
+
+data_2[which(data_2$PrimaryPos == "1B" | data_2$PrimaryPos == "2B" | data_2$PrimaryPos == "3B" | data_2$PrimaryPos == "SS" | data_2$PrimaryPos == "IF"),]$PrimaryPos <- "IF"
+
+data_2[which(data_2$PrimaryPos == "LF" | data_2$PrimaryPos == "OF" | data_2$PrimaryPos == "RF" | data_2$PrimaryPos == "CF"),]$PrimaryPos <- "OF"
+
+data_2_4yr <- data_2 %>%
+  filter(PrevType == "4Yr")
+
+data_2_hs <- data_2 %>%
+  filter(PrevType == "HS")
+
+data_2_jc <- data_2 %>%
+  filter(PrevType == "JC")
+
+```
+
+
+anova(Career WAR ~ is_miss_10_months + position)
+
+```{r}
+
+#l2 = lm(Career_WAR ~ is_miss_3_months_season + PrimaryPos, data = data_2)
+#anova(l2)
+
+l_4yr_2 = lm(Career_WAR ~ is_miss_3_months_season + PrimaryPos, data = data_2_4yr)
+anova(l_4yr_2)
+summary(l_4yr_2)
+
+
+l_hs_2 = lm(Career_WAR ~ is_miss_3_months_season + PrimaryPos, data = data_2_hs)
+anova(l_hs_2)
+summary(l_hs_2)
+
+l_jc_2 = lm(Career_WAR ~ is_miss_3_months_season + PrimaryPos, data = data_2_jc)
+anova(l_jc_2)
+summary(l_jc_2)
+```
+
+```{r}
+l_4yr_3 = lm(Career_WAR ~ is_miss_10_months + PrimaryPos, data = data_2_4yr)
+anova(l_4yr_3)
+summary(l_4yr_3)
+
+
+l_hs_3 = lm(Career_WAR ~ is_miss_10_months + PrimaryPos, data = data_2_hs)
+anova(l_hs_3)
+summary(l_hs_3)
+
+l_jc_3 = lm(Career_WAR ~ is_miss_10_months + PrimaryPos, data = data_2_jc)
+anova(l_jc_3)
+summary(l_jc_3)
+```
+
+
+```{r}
+
+
+data_1 <- data_1 %>%
+  filter(PrevType %in% c("4Yr", "HS", "JC"))
+boxplot_bonus <- ggplot(data_1, aes(x=PrevType, y=Bonus, fill=PrevType)) + 
+  geom_boxplot(lwd=0.2) + 
+  scale_fill_manual(values=c("#d95543", "#39994f", "#98bcdc")) +
+  labs(title = "Bonus distribution for Draft Time Groups", x="Draft Time", y="Bonus (Millions)") +
+  scale_x_discrete(labels = c("4 Year College", "High School", "Junior College")) +
+  scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6)) +
+  theme(text=element_text(family = "Times New Roman"), plot.title = element_text(face="bold"), legend.position = "none")
+
+boxplot_bonus
+```
+
+
+```{r}
+data_hs_4yr <- data_1 %>%
+  filter(PrevType %in% c("4Yr", "HS"))
+
+data_hs_jc <- data_1 %>%
+  filter(PrevType %in% c("HS", "JC"))
+
+t.test(Bonus ~ PrevType, data = data_hs_4yr, alternative = "less")
+t.test(Bonus ~ PrevType, data = data_hs_jc, alternative = "greater")
+```
+
+
